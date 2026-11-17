@@ -1,0 +1,1660 @@
+```html
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hvad skal vi spise? – Hvad har du i køleskabet?</title>
+  <!-- PWA & Hjemmeskærms-indstillinger -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Hvad skal vi spise?" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#D96B27" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23D96B27'/%3E%3Ctext x='50' y='67' font-size='54' text-anchor='middle'%3E%F0%9F%A5%98%3C/text%3E%3C/svg%3E" />
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23D96B27'/%3E%3Ctext x='50' y='67' font-size='54' text-anchor='middle'%3E%F0%9F%A5%98%3C/text%3E%3C/svg%3E" />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            cream: {
+              50: '#FDFBF7',
+              100: '#FAF5EC',
+              200: '#F3E9D8',
+            },
+            terracotta: {
+              500: '#D96B27',
+              600: '#C2591A',
+              700: '#9E4512',
+            },
+            sage: {
+              50: '#F2F7F2',
+              100: '#E1EFE2',
+              600: '#2E7D32',
+              700: '#1B5E20',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Skjul scrollbar på vandrette quick-tags men bevar scroll-funktionalitet */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* Blød animation til modaler */
+    @keyframes slideUp {
+      from { transform: translateY(24px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .animate-slide-up {
+      animation: slideUp 0.25s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="bg-cream-100 text-stone-800 font-sans antialiased min-h-screen flex flex-col selection:bg-terracotta-500 selection:text-white">
+
+  <!-- Top Header -->
+  <header class="bg-cream-50/95 backdrop-blur-md border-b border-cream-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-terracotta-500 to-amber-600 text-white flex items-center justify-center shadow-sm text-xl shrink-0">
+          🥘
+        </div>
+        <div class="min-w-0">
+          <h1 class="text-base sm:text-xl font-extrabold tracking-tight text-stone-900 leading-tight truncate">Hvad skal vi spise?</h1>
+          <!-- Synkroniseringsstatus & Husstandskode knap -->
+          <button
+            id="openSyncModalBtn"
+            type="button"
+            class="mt-0.5 inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-stone-600 hover:text-stone-900 bg-cream-100 hover:bg-cream-200 px-2 py-0.5 rounded-full transition max-w-full"
+            title="Administrer fælles husstandskode"
+          >
+            <span id="syncDot" class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+            <span id="syncStatusText" class="truncate">Forbinder...</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tilføj ny opskrift knap -->
+      <button 
+        id="openAddModalBtn"
+        type="button"
+        class="bg-terracotta-500 hover:bg-terracotta-600 active:scale-95 text-white font-semibold text-xs sm:text-sm px-3.5 sm:px-4 py-2.5 rounded-2xl shadow-sm transition-all flex items-center gap-1.5 min-h-[44px] shrink-0"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        <span>Ny opskrift</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-3xl w-full mx-auto px-4 pt-5 pb-16 space-y-6">
+
+    <!-- Sektion 1: Hvad har jeg på lager? -->
+    <section class="bg-cream-50 rounded-3xl p-4 sm:p-6 shadow-sm border border-cream-200">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <label for="ingredientInput" class="text-base sm:text-lg font-bold text-stone-900 flex items-center gap-2">
+          <span>🧺</span> Hvad har jeg på lager?
+        </label>
+        <div class="flex items-center gap-2">
+          <!-- Kontakt til at dele køleskab med kæresten -->
+          <label class="inline-flex items-center gap-2 cursor-pointer bg-white border border-cream-200 px-2.5 py-1.5 rounded-xl select-none">
+            <input type="checkbox" id="syncInventoryToggle" class="sr-only peer" />
+            <div class="w-8 h-4.5 bg-stone-200 peer-checked:bg-sage-600 rounded-full relative transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:w-3.5 after:h-3.5 after:rounded-full after:transition-transform peer-checked:after:translate-x-3.5"></div>
+            <span class="text-xs font-semibold text-stone-700">Del køleskab</span>
+          </label>
+
+          <button 
+            id="clearAllIngredientsBtn" 
+            type="button" 
+            class="hidden text-xs font-semibold text-terracotta-600 hover:text-terracotta-700 px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 transition"
+          >
+            Ryd alle
+          </button>
+        </div>
+      </div>
+
+      <!-- Søge- og indtastningsfelt -->
+      <form id="ingredientForm" class="flex gap-2">
+        <div class="relative flex-1">
+          <input 
+            type="text" 
+            id="ingredientInput" 
+            placeholder="F.eks. kylling, karry, gulerødder..." 
+            autocomplete="off"
+            class="w-full bg-white border-2 border-cream-200 focus:border-terracotta-500 focus:outline-none rounded-2xl px-4 py-3 text-base text-stone-800 placeholder:text-stone-400 transition"
+          />
+        </div>
+        <button 
+          type="submit"
+          class="bg-stone-900 hover:bg-stone-800 active:scale-95 text-white font-semibold px-5 py-3 rounded-2xl transition shadow-sm min-h-[48px] shrink-0"
+        >
+          Tilføj
+        </button>
+      </form>
+
+      <!-- Hurtig-knapper til typiske basisingredienser -->
+      <div class="mt-4">
+        <p class="text-xs font-semibold uppercase tracking-wider text-stone-400 mb-2">Hurtig-tilføj basisvarer:</p>
+        <div id="quickIngredientsContainer" class="flex flex-wrap gap-2">
+          <!-- Genereres dynamisk via JS -->
+        </div>
+      </div>
+
+      <!-- Valgte ingredienser (Chips/Tags) -->
+      <div id="selectedIngredientsWrapper" class="mt-4 pt-4 border-t border-cream-200 hidden">
+        <p class="text-xs font-semibold uppercase tracking-wider text-sage-700 mb-2 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-sage-600 inline-block"></span>
+          Dit køleskab & skab (<span id="selectedCount">0</span>):
+        </p>
+        <div id="selectedIngredientsList" class="flex flex-wrap gap-2">
+          <!-- Valgte tags vises her -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Sektion 2: Opskriftsoversigt -->
+    <section class="space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2 px-1">
+        <div>
+          <h2 id="resultsHeading" class="text-lg sm:text-xl font-extrabold text-stone-900">Alle hverdagsopskrifter</h2>
+          <p id="resultsSubheading" class="text-xs sm:text-sm text-stone-500">Tilføj ingredienser ovenfor for at finde dine bedste match</p>
+        </div>
+        <span id="recipeCountBadge" class="bg-cream-200 text-stone-700 text-xs font-bold px-3 py-1.5 rounded-full">
+          0 opskrifter
+        </span>
+      </div>
+
+      <!-- Opskriftskort Container -->
+      <div id="recipesGrid" class="grid grid-cols-1 gap-4">
+        <!-- Opskrifter indsættes her -->
+      </div>
+
+      <!-- Tom tilstand hvis ingen opskrifter matcher -->
+      <div id="emptyState" class="hidden bg-cream-50 rounded-3xl p-8 text-center border border-cream-200 space-y-3">
+        <div class="text-4xl">🍳</div>
+        <h3 class="text-lg font-bold text-stone-800">Ingen opskrifter matchede præcis dine ingredienser</h3>
+        <p class="text-sm text-stone-500 max-w-md mx-auto">Prøv at tilføje et par ekstra basisvarer (f.eks. løg, æg, ris eller pasta) eller opret din egen opskrift!</p>
+        <button 
+          id="resetSearchBtn"
+          type="button"
+          class="mt-2 bg-terracotta-500 hover:bg-terracotta-600 text-white font-semibold text-sm px-5 py-3 rounded-2xl transition"
+        >
+          Vis alle opskrifter
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL 1: Detaljeret opskriftsvisning -->
+  <div id="recipeModal" class="fixed inset-0 z-50 hidden bg-stone-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+    <div class="bg-cream-50 w-full max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl border border-cream-200 max-h-[92vh] flex flex-col animate-slide-up overflow-hidden">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-4 bg-white border-b border-cream-200 flex items-start justify-between gap-4 shrink-0">
+        <div class="flex items-center gap-3">
+          <span id="modalEmoji" class="text-3xl bg-cream-100 w-12 h-12 rounded-2xl flex items-center justify-center shrink-0">🍲</span>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span id="modalTimeBadge" class="text-xs font-semibold bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full">⏱ 30 min</span>
+              <span id="modalMatchBadge" class="text-xs font-bold bg-sage-100 text-sage-700 px-2.5 py-0.5 rounded-full"></span>
+              <span id="modalCustomBadge" class="hidden text-xs font-semibold bg-stone-200 text-stone-700 px-2.5 py-0.5 rounded-full">Egen opskrift</span>
+            </div>
+            <h2 id="modalTitle" class="text-xl sm:text-2xl font-extrabold text-stone-900 mt-1 leading-snug">Opskriftstitel</h2>
+          </div>
+        </div>
+
+        <button 
+          id="closeRecipeModalBtn" 
+          type="button" 
+          aria-label="Luk opskrift"
+          class="w-10 h-10 rounded-2xl bg-cream-100 hover:bg-cream-200 text-stone-600 flex items-center justify-center shrink-0 transition"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <!-- Modal Scrollable Body -->
+      <div class="p-5 overflow-y-auto space-y-6 flex-1">
+        
+        <!-- Ingredienser opdelt i 'Du har' og 'Du mangler' -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Du har -->
+          <div class="bg-sage-50 border border-sage-100 rounded-2xl p-4">
+            <h3 class="text-sm font-bold text-sage-700 flex items-center gap-1.5 mb-2.5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Du har (<span id="modalHaveCount">0</span>)
+            </h3>
+            <ul id="modalHaveList" class="space-y-1.5 text-sm text-stone-800">
+              <!-- Indsættes via JS -->
+            </ul>
+          </div>
+
+          <!-- Du mangler -->
+          <div class="bg-amber-50/70 border border-amber-200/70 rounded-2xl p-4">
+            <div class="flex items-center justify-between mb-2.5">
+              <h3 class="text-sm font-bold text-amber-800 flex items-center gap-1.5">
+                <span>🛒</span> Du mangler (<span id="modalMissingCount">0</span>)
+              </h3>
+              <button 
+                id="copyMissingBtn" 
+                type="button"
+                class="text-xs font-semibold text-terracotta-600 hover:text-terracotta-700 bg-white px-2.5 py-1 rounded-xl border border-amber-200 shadow-2xs active:scale-95 transition"
+              >
+                Kopiér liste
+              </button>
+            </div>
+            <ul id="modalMissingList" class="space-y-1.5 text-sm text-stone-700">
+              <!-- Indsættes via JS -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Trin-for-trin fremgangsmåde -->
+        <div class="bg-white rounded-2xl p-4 sm:p-5 border border-cream-200">
+          <h3 class="text-base font-extrabold text-stone-900 mb-3 flex items-center gap-2">
+            <span>👨‍🍳</span> Fremgangsmåde
+          </h3>
+          <ol id="modalStepsList" class="space-y-3.5 text-sm sm:text-base text-stone-700">
+            <!-- Trin indsættes via JS -->
+          </ol>
+        </div>
+
+        <!-- Slet egen opskrift sektion (vises kun for brugeroprettede opskrifter) -->
+        <div id="deleteRecipeSection" class="hidden pt-2 border-t border-cream-200 flex items-center justify-between">
+          <span class="text-xs text-stone-500">Dette er en af dine egne gemte opskrifter.</span>
+          <button 
+            id="deleteRecipeBtn" 
+            type="button"
+            class="text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3.5 py-2 rounded-xl transition"
+          >
+            Slet opskrift
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3.5 bg-white border-t border-cream-200 flex justify-end shrink-0">
+        <button 
+          id="closeRecipeFooterBtn" 
+          type="button" 
+          class="w-full sm:w-auto bg-stone-900 hover:bg-stone-800 text-white font-semibold px-6 py-3 rounded-2xl transition min-h-[46px]"
+        >
+          Luk opskrift
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: Tilføj ny opskrift -->
+  <div id="addRecipeModal" class="fixed inset-0 z-50 hidden bg-stone-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+    <div class="bg-cream-50 w-full max-w-xl rounded-t-3xl sm:rounded-3xl shadow-2xl border border-cream-200 max-h-[92vh] flex flex-col animate-slide-up overflow-hidden">
+      
+      <div class="px-5 py-4 bg-white border-b border-cream-200 flex items-center justify-between shrink-0">
+        <h2 class="text-lg sm:text-xl font-extrabold text-stone-900 flex items-center gap-2">
+          <span>✍️</span> Tilføj ny opskrift
+        </h2>
+        <button 
+          id="closeAddModalBtn" 
+          type="button" 
+          aria-label="Luk formular"
+          class="w-10 h-10 rounded-2xl bg-cream-100 hover:bg-cream-200 text-stone-600 flex items-center justify-center transition"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <form id="addRecipeForm" class="p-5 overflow-y-auto space-y-4 flex-1">
+        <!-- Scan opskrift fra papir / kamera -->
+        <div class="bg-amber-50/90 border-2 border-dashed border-terracotta-500/40 rounded-2xl p-4 text-center space-y-2.5">
+          <input
+            type="file"
+            id="scanRecipeInput"
+            accept="image/*"
+            class="hidden"
+          />
+          <button
+            type="button"
+            id="triggerScanBtn"
+            class="w-full bg-white hover:bg-cream-100 active:scale-[0.99] text-stone-900 font-bold text-sm px-4 py-3 rounded-xl border border-cream-200 shadow-xs transition flex items-center justify-center gap-2 min-h-[46px]"
+          >
+            <span class="text-lg">📸</span>
+            <span>Scan opskrift med kamera / foto</span>
+          </button>
+          <p id="scanHelperText" class="text-xs text-stone-600">
+            Tag et billede af dit Skagenfood-kort – så udfyldes felterne automatisk!
+          </p>
+
+          <!-- Indlæsnings- og forhåndsvisningsstatus -->
+          <div id="scanStatusBox" class="hidden pt-1 flex items-center justify-center gap-3 text-left bg-white/80 rounded-xl p-2.5 border border-amber-200">
+            <img id="scanPreviewImg" src="" alt="Scannet opskrift" class="w-12 h-12 object-cover rounded-lg border border-cream-200 shrink-0 hidden" />
+            <div class="flex items-center gap-2 text-xs font-semibold text-terracotta-700">
+              <svg id="scanSpinner" class="animate-spin h-4 w-4 text-terracotta-600 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span id="scanStatusText">Aflæser opskriften fra billedet...</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label for="newTitle" class="block text-sm font-bold text-stone-800 mb-1">Opskriftens titel *</label>
+          <input 
+            type="text" 
+            id="newTitle" 
+            required 
+            placeholder="F.eks. Mormors kødsovs eller Laks i fad"
+            class="w-full bg-white border-2 border-cream-200 focus:border-terracotta-500 focus:outline-none rounded-2xl px-4 py-3 text-base"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="newTime" class="block text-sm font-bold text-stone-800 mb-1">Tilberedningstid *</label>
+            <input 
+              type="text" 
+              id="newTime" 
+              required 
+              placeholder="F.eks. 25 min"
+              value="30 min"
+              class="w-full bg-white border-2 border-cream-200 focus:border-terracotta-500 focus:outline-none rounded-2xl px-4 py-3 text-base"
+            />
+          </div>
+          <div>
+            <label for="newEmoji" class="block text-sm font-bold text-stone-800 mb-1">Ikon</label>
+            <select 
+              id="newEmoji"
+              class="w-full bg-white border-2 border-cream-200 focus:border-terracotta-500 focus:outline-none rounded-2xl px-4 py-3 text-base"
+            >
+              <option value="🍲">🍲 Gryderet</option>
+              <option value="🍝">🍝 Pasta</option>
+              <option value="🍗">🍗 Kylling / Kød</option>
+              <option value="🥗">🥗 Salat / Grønt</option>
+              <option value="🍜">🍜 Suppe / Wok</option>
+              <option value="🍳">🍳 Æg / Pande</option>
+              <option value="🥙">🥙 Brød / Pita</option>
+              <option value="🐟">🐟 Fisk</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="newIngredients" class="block text-sm font-bold text-stone-800 mb-1">
+            Ingredienser * <span class="font-normal text-xs text-stone-500">(adskil med komma eller linjeskift)</span>
+          </label>
+          <textarea 
+            id="newIngredients" 
+            rows="3" 
+            required 
+            placeholder="F.eks. kylling, fløde, løg, hvidløg, pasta, spinat"
+            class="w-full bg-white border-2 border-cream-200 focus:border-terracotta-500 focus:outline-none rounded-2xl px-4 py-3 text-base"
+          ></textarea>
+        </div>
+
+        <div>
+          <label for="newSteps" class="block text-sm font-bold text-stone-800 mb-1">
+            Fremgangsmåde * <span class="font-normal text-xs text-stone-500">(ét trin pr. linje)</span>
+          </label>
+          <textarea 
+            id="newSteps" 
+            rows="4" 
+            required 
+            placeholder="Skær kyllingen i tern og brun den på panden.&#10;Tilsæt hakket løg og hvidløg.&#10;Hæld fløde ved og lad det simre i 10 min."
+            class="w-full bg-white border-2 border-cream-200 focus:border-terracotta-500 focus:outline-none rounded-2xl px-4 py-3 text-base"
+          ></textarea>
+        </div>
+
+        <div class="pt-2 flex gap-3">
+          <button 
+            type="button" 
+            id="cancelAddBtn"
+            class="flex-1 bg-cream-200 hover:bg-stone-300 text-stone-800 font-semibold py-3.5 rounded-2xl transition min-h-[48px]"
+          >
+            Annuller
+          </button>
+          <button 
+            type="submit"
+            class="flex-1 bg-terracotta-500 hover:bg-terracotta-600 text-white font-bold py-3.5 rounded-2xl shadow-sm transition min-h-[48px]"
+          >
+            Gem opskrift
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast besked (i stedet for alert) -->
+  <div id="toastNotification" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden bg-stone-900 text-white text-sm font-semibold px-5 py-3 rounded-2xl shadow-xl transition-opacity">
+    Besked
+  </div>
+
+  <!-- MODAL 3: Husstandskode & Deling med kæresten -->
+  <div id="syncModal" class="fixed inset-0 z-50 hidden bg-stone-900/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+    <div class="bg-cream-50 w-full max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl border border-cream-200 flex flex-col animate-slide-up overflow-hidden">
+      <div class="px-5 py-4 bg-white border-b border-cream-200 flex items-center justify-between">
+        <h2 class="text-lg font-extrabold text-stone-900 flex items-center gap-2">
+          <span>💑</span> Del med din kæreste
+        </h2>
+        <button
+          id="closeSyncModalBtn"
+          type="button"
+          aria-label="Luk"
+          class="w-10 h-10 rounded-2xl bg-cream-100 hover:bg-cream-200 text-stone-600 flex items-center justify-center transition"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-5">
+        <p class="text-sm text-stone-600 leading-relaxed">
+          Indtast den samme <strong>Husstandskode</strong> på begge jeres telefoner. Så synkroniseres jeres egne opskrifter automatisk i realtid!
+        </p>
+
+        <!-- Din nuværende kode + Del-knap -->
+        <div class="bg-white rounded-2xl p-4 border border-cream-200 flex items-center justify-between gap-3">
+          <div>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-stone-400 block">Jeres husstandskode</span>
+            <span id="displayHouseholdCode" class="text-2xl font-extrabold tracking-widest text-terracotta-600">MAD-2026</span>
+          </div>
+          <button
+            id="shareHouseholdCodeBtn"
+            type="button"
+            class="bg-sage-600 hover:bg-sage-700 active:scale-95 text-white font-semibold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-xs transition flex items-center gap-1.5 min-h-[42px]"
+          >
+            <span>📤</span>
+            <span>Del kode</span>
+          </button>
+        </div>
+
+        <!-- Skift til kærestens kode -->
+        <form id="changeHouseholdForm" class="space-y-2.5">
+          <label for="householdCodeInput" class="block text-xs font-bold uppercase tracking-wider text-stone-500">
+            Har din kæreste allerede en kode? Indtast den her:
+          </label>
+          <div class="flex gap-2">
+            <input
+              type="text"
+              id="householdCodeInput"
+              placeholder="F.eks. HYGGE-42"
+              maxlength="20"
+              class="flex-1 uppercase bg-white border-2 border-cream-200 focus:border-terracotta-500 focus:outline-none rounded-2xl px-4 py-2.5 text-base font-bold tracking-wider"
+            />
+            <button
+              type="submit"
+              class="bg-stone-900 hover:bg-stone-800 text-white font-semibold text-sm px-4 py-2.5 rounded-2xl transition min-h-[46px]"
+            >
+              Forbind
+            </button>
+          </div>
+        </form>
+
+        <div class="pt-1 flex justify-between items-center border-t border-cream-200">
+          <button
+            id="generateNewCodeBtn"
+            type="button"
+            class="text-xs font-semibold text-stone-500 hover:text-stone-800 underline"
+          >
+            Opret ny tilfældig kode
+          </button>
+          <button
+            id="doneSyncModalBtn"
+            type="button"
+            class="bg-cream-200 hover:bg-stone-300 text-stone-800 font-semibold text-sm px-5 py-2.5 rounded-xl transition"
+          >
+            Færdig
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, addDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // =========================================================================
+    // 1. DATA: FORUDINDLÆSTE DANSKE HVERDAGSOPSKRIFTER & BASISVARER
+    // =========================================================================
+    const QUICK_BASICS = [
+      'Kylling', 'Karry', 'Ris', 'Pasta', 'Løg', 'Hvidløg',
+      'Hakket oksekød', 'Gulerødder', 'Fløde', 'Æg', 'Østerssauce', 'Pitabrød'
+    ];
+
+    const DEFAULT_RECIPES = [
+      {
+        id: 'default-1',
+        title: 'Kylling i karry med ris',
+        time: '30 min',
+        emoji: '🍛',
+        ingredients: ['kylling', 'karry', 'løg', 'æble', 'fløde', 'hønsebouillon', 'ris'],
+        steps: [
+          'Kog risene efter anvisningen på pakken.',
+          'Skær kylling i mundrette stykker. Hak løg og skær æblet i små tern.',
+          'Svits karry i lidt olie eller smør i en gryde i 1 minut, så smagen frigives.',
+          'Tilsæt kylling, løg og æble, og brun det hele godt af i 4-5 minutter.',
+          'Hæld hønsebouillon og fløde ved, og lad retten simre i 12-15 minutter. Smag til med salt og peber, og server med ris.'
+        ],
+        isCustom: false
+      },
+      {
+        id: 'default-2',
+        title: 'Wok med kylling, grøntsager og østerssauce',
+        time: '25 min',
+        emoji: '🥘',
+        ingredients: ['kylling', 'gulerødder', 'peberfrugt', 'broccoli', 'hvidløg', 'østerssauce', 'soja', 'nudler'],
+        steps: [
+          'Tilbered nudlerne efter anvisningen på pakken.',
+          'Skær kylling i tynde strimler, og snit gulerødder, peberfrugt og broccoli i mundrette stykker.',
+          'Lynsteg kyllingen ved høj varme i en wok eller dyb pande med lidt olie, og tag den op.',
+          'Steg grøntsager og finthakket hvidløg i 3-4 minutter, så de stadig har bid.',
+          'Kom kyllingen tilbage i wokken sammen med østerssauce, soja og de kogte nudler. Vend det hele godt sammen og server straks.'
+        ],
+        isCustom: false
+      },
+      {
+        id: 'default-3',
+        title: 'Klassisk pasta bolognese',
+        time: '40 min',
+        emoji: '🍝',
+        ingredients: ['hakket oksekød', 'pasta', 'løg', 'hvidløg', 'gulerødder', 'hakkede tomater', 'tomatpuré', 'oregano'],
+        steps: [
+          'Hak løg og hvidløg fint, og riv gulerødderne groft.',
+          'Brun hakket oksekød i en gryde ved høj varme, til det har taget farve.',
+          'Tilsæt løg, hvidløg, revne gulerødder og tomatpuré, og svits det med i et par minutter.',
+          'Hæld hakkede tomater og oregano i gryden. Lad kødsovsen simre under låg i mindst 20 minutter.',
+          'Kog pastaen al dente, og server med den varme bolognese og evt. revet ost.'
+        ],
+        isCustom: false
+      },
+      {
+        id: 'default-4',
+        title: 'Boller i karry',
+        time: '35 min',
+        emoji: '🍲',
+        ingredients: ['hakket svinekød', 'løg', 'æg', 'havregryn', 'mælk', 'karry', 'mel', 'ris'],
+        steps: [
+          'Rør en fars af hakket svinekød, revet løg, æg, havregryn, mælk, salt og peber. Lad farsen hvile i 10 minutter.',
+          'Sæt ris over at koge, og bring en gryde med letsaltet vand i kog.',
+          'Form små kødboller med en ske og kog dem i vandet i ca. 8 minutter, til de flyder op. Gem kogevandet!',
+          'Smelt smør i en gryde, brænd karry af, pisk mel i, og spæd op med kogevandet fra kødbollerne til en glat sovs.',
+          'Vend kødbollerne i karrysovsen, varm igennem og server med ris.'
+        ],
+        isCustom: false
+      },
+      {
+        id: 'default-5',
+        title: 'Frikadeller med kartoffelsalat',
+        time: '40 min',
+        emoji: '🥔',
+        ingredients: ['hakket kalv og flæsk', 'løg', 'æg', 'mælk', 'mel', 'kartofler', 'creme fraiche', 'purløg'],
+        steps: [
+          'Kog kartoflerne møre i letsaltet vand, afkøl dem let og skær dem i skiver.',
+          'Rør en dressing af creme fraiche, lidt sennep/mayo, salt, peber og fintklippet purløg, og vend kartoflerne i.',
+          'Rør farsen sammen af kød, fintrevet løg, æg, mel, mælk, salt og peber.',
+          'Form frikadeller med en spiseske og steg dem gyldne og gennemstegte på en pande i smør/olie i ca. 5-6 min. på hver side.'
+        ],
+        isCustom: false
+      },
+      {
+        id: 'default-6',
+        title: 'Pitabrød med krydret kylling og grønt',
+        time: '20 min',
+        emoji: '🥙',
+        ingredients: ['pitabrød', 'kylling', 'karry', 'paprika', 'agurk', 'tomat', 'salat', 'creme fraiche'],
+        steps: [
+          'Skær kyllingen i små tern og steg dem på en varm pande krydret med karry, paprika, salt og peber.',
+          'Lun pitabrødene i ovnen eller på brødristeren.',
+          'Snit salat, agurk og tomat i fine tern.',
+          'Rør en hurtig dressing af creme fraiche, lidt hvidløg, salt og peber.',
+          'Fyld de lune pitabrød med grønt, krydret kylling og dressing.'
+        ],
+        isCustom: false
+      },
+      {
+        id: 'default-7',
+        title: 'Æggekage med bacon og purløg',
+        time: '20 min',
+        emoji: '🍳',
+        ingredients: ['æg', 'mælk', 'bacon', 'purløg', 'tomat', 'rugbrød'],
+        steps: [
+          'Steg baconskiverne sprøde på en pande og læg dem på fedtsugende papir.',
+          'Pisk æg og mælk sammen med salt og peber.',
+          'Hæld æggemassen på panden ved svag/middel varme. Skrab forsigtigt i bunden indtil æggekagen næsten har sat sig.',
+          'Pynt med sprød bacon, skiver af tomat og masser af friskklippet purløg. Server med rugbrød.'
+        ],
+        isCustom: false
+      },
+      {
+        id: 'default-8',
+        title: 'Cremet karrysuppe med kylling',
+        time: '30 min',
+        emoji: '🍜',
+        ingredients: ['kylling', 'karry', 'løg', 'gulerødder', 'kartofler', 'hønsebouillon', 'fløde'],
+        steps: [
+          'Skær løg, gulerødder og kartofler i mindre tern, og skær kyllingen i strimler.',
+          'Svits karry i en gryde med lidt olie, og tilsæt derefter løg, gulerødder og kartofler.',
+          'Hæld hønsebouillon over så det dækker, og lad suppen koge i 15 minutter til grøntsagerne er helt møre.',
+          'Blend suppen glat med en stavblender, tilsæt fløde og kyllingestrimler, og lad den simre i 5-6 minutter til kyllingen er gennemkogt.'
+        ],
+        isCustom: false
+      },
+      {
+        id: 'default-9',
+        title: 'Lasagne med oksekød',
+        time: '55 min',
+        emoji: '🧀',
+        ingredients: ['hakket oksekød', 'lasagneplader', 'løg', 'hvidløg', 'gulerødder', 'hakkede tomater', 'mornaysauce', 'revet ost'],
+        steps: [
+          'Svits hakket løg, hvidløg og revne gulerødder i en gryde, og brun derefter det hakkede oksekød.',
+          'Tilsæt hakkede tomater, salt, peber og evt. lidt oregano, og lad kødsovsen simre i 15 minutter.',
+          'Læg kødsovs, mornaysauce og lasagneplader lagvis i et smurt ovnfast fad. Slut af med sauce og revet ost på toppen.',
+          'Bag lasagnen i ovnen ved 200 grader i ca. 30 minutter, til den er gylden og boblende.'
+        ],
+        isCustom: false
+      },
+      {
+        id: 'default-10',
+        title: 'Kylling i fad med grøntsager og fløde',
+        time: '45 min',
+        emoji: '🍗',
+        ingredients: ['kylling', 'fløde', 'gulerødder', 'kartofler', 'løg', 'hvidløg', 'paprika'],
+        steps: [
+          'Skræl kartofler og gulerødder, og skær dem i mundrette stykker. Skær løg i både.',
+          'Læg grøntsagerne i et ovnfast fad sammen med kyllingebryst eller kyllingelår.',
+          'Rør fløde sammen med presset hvidløg, paprika, salt og peber, og hæld det over kylling og grøntsager.',
+          'Bag fadet i ovnen ved 200 grader i ca. 35-40 minutter, til kyllingen er gennemstegt og grøntsagerne er møre.'
+        ],
+        isCustom: false
+      }
+    ];
+
+    // =========================================================================
+    // 2. FIREBASE CLOUD SYNKRONISERING & HUSSTANDSKODE STATE
+    // =========================================================================
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'koekkenhjaelpen-default';
+    let db = null;
+    let auth = null;
+    let currentUser = null;
+
+    let selectedIngredients = [];
+    let localIngredients = [];
+    let sharedIngredients = [];
+    let syncInventoryEnabled = false;
+
+    let customRecipes = [];
+    let currentOpenedRecipeId = null;
+    let deleteConfirmPending = false;
+
+    let unsubscribeRecipes = null;
+    let unsubscribeInventory = null;
+
+    // Generer eller hent husstandskode fra URL-hash (så delte links åbner samme kode automatisk)
+    function generateHouseholdCode() {
+      const words = ['HYGGE', 'KARRY', 'KYLLING', 'MAD', 'GRYDE', 'SMAG', 'KOK'];
+      const word = words[Math.floor(Math.random() * words.length)];
+      const num = Math.floor(100 + Math.random() * 900);
+      return `${word}-${num}`;
+    }
+
+    function getInitialHouseholdCode() {
+      const hash = window.location.hash || '';
+      const match = hash.match(/kode=([A-Za-z0-9-_]+)/i);
+      if (match && match[1]) {
+        return match[1].toUpperCase();
+      }
+      const newCode = generateHouseholdCode();
+      window.history.replaceState(null, '', `#kode=${newCode}`);
+      return newCode;
+    }
+
+    let householdCode = getInitialHouseholdCode();
+
+    function updateSyncStatusUI(connected) {
+      const dot = document.getElementById('syncDot');
+      const text = document.getElementById('syncStatusText');
+      const displayCode = document.getElementById('displayHouseholdCode');
+      const inputCode = document.getElementById('householdCodeInput');
+
+      if (displayCode) displayCode.textContent = householdCode;
+      if (inputCode && !inputCode.value) inputCode.placeholder = householdCode;
+
+      if (connected) {
+        dot.className = 'w-2 h-2 rounded-full bg-sage-600 shrink-0';
+        text.textContent = `Synkroniseret • Kode: ${householdCode}`;
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-amber-400 shrink-0';
+        text.textContent = `Lokal tilstand • Kode: ${householdCode}`;
+      }
+    }
+
+    async function initFirebaseSync() {
+      try {
+        if (typeof __firebase_config === 'undefined') {
+          updateSyncStatusUI(false);
+          return;
+        }
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          const cred = await signInWithCustomToken(auth, __initial_auth_token);
+          currentUser = cred.user;
+        } else {
+          const cred = await signInAnonymously(auth);
+          currentUser = cred.user;
+        }
+
+        subscribeToHouseholdData();
+      } catch (err) {
+        console.error('Firebase initialisering fejlede:', err);
+        updateSyncStatusUI(false);
+      }
+    }
+
+    function subscribeToHouseholdData() {
+      if (!db || !currentUser) return;
+
+      if (unsubscribeRecipes) unsubscribeRecipes();
+      if (unsubscribeInventory) unsubscribeInventory();
+
+      // Lyt i realtid til alle offentlige opskrifter og filtrér på husstandskode i JS
+      const recipesColRef = collection(db, 'artifacts', appId, 'public', 'data', 'household_recipes');
+      unsubscribeRecipes = onSnapshot(
+        recipesColRef,
+        (snapshot) => {
+          const matchedRecipes = [];
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data && data.householdCode === householdCode) {
+              matchedRecipes.push({
+                id: docSnap.id,
+                title: data.title || 'Uden titel',
+                time: data.time || '30 min',
+                emoji: data.emoji || '🍲',
+                ingredients: Array.isArray(data.ingredients) ? data.ingredients : [],
+                steps: Array.isArray(data.steps) ? data.steps : [],
+                createdAt: data.createdAt || 0,
+                isCustom: true
+              });
+            }
+          });
+          matchedRecipes.sort((a, b) => b.createdAt - a.createdAt);
+          customRecipes = matchedRecipes;
+          updateSyncStatusUI(true);
+          updateAllUI();
+        },
+        (err) => {
+          console.error('Fejl ved realtidssynkronisering af opskrifter:', err);
+          updateSyncStatusUI(false);
+        }
+      );
+
+      // Lyt i realtid til husstandens delte køleskab
+      const invDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'household_inventories', householdCode);
+      unsubscribeInventory = onSnapshot(
+        invDocRef,
+        (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            sharedIngredients = Array.isArray(data.ingredients) ? data.ingredients : [];
+          } else {
+            sharedIngredients = [];
+          }
+          if (syncInventoryEnabled) {
+            selectedIngredients = [...sharedIngredients];
+            updateAllUI();
+          }
+        },
+        (err) => {
+          console.error('Fejl ved synkronisering af køleskab:', err);
+        }
+      );
+    }
+
+    async function saveInventoryState() {
+      if (!syncInventoryEnabled) {
+        localIngredients = [...selectedIngredients];
+        return;
+      }
+      sharedIngredients = [...selectedIngredients];
+      if (!db || !currentUser) return;
+
+      try {
+        const invDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'household_inventories', householdCode);
+        await setDoc(invDocRef, {
+          householdCode,
+          ingredients: selectedIngredients,
+          updatedAt: Date.now()
+        });
+      } catch (err) {
+        console.error('Kunne ikke opdatere delt køleskab:', err);
+        showToast('Kunne ikke synkronisere køleskab');
+      }
+    }
+
+    function setHouseholdCode(newCode) {
+      const cleaned = newCode.trim().toUpperCase().replace(/[^A-Z0-9-_]/g, '');
+      if (!cleaned) {
+        showToast('Indtast venligst en gyldig kode');
+        return;
+      }
+      householdCode = cleaned;
+      window.history.replaceState(null, '', `#kode=${householdCode}`);
+      updateSyncStatusUI(Boolean(db && currentUser));
+      subscribeToHouseholdData();
+      showToast(`Forbundet til husstand: ${householdCode}`);
+    }
+
+    function getAllRecipes() {
+      return [...customRecipes, ...DEFAULT_RECIPES];
+    }
+
+    // =========================================================================
+    // 3. SMART INGREDIENS-MATCHING LOGIK
+    // =========================================================================
+    function normalizeText(str) {
+      return str.toLowerCase().trim();
+    }
+
+    function isIngredientMatch(userIng, recipeIng) {
+      const u = normalizeText(userIng);
+      const r = normalizeText(recipeIng);
+      if (!u || !r) return false;
+      if (u === r) return true;
+      if (r.includes(u) || u.includes(r)) return true;
+
+      // Danske specialtilfælde (entals-/flertalsstammer og varianter)
+      const pairs = [
+        ['gulerod', 'gulerødder'],
+        ['kartoffel', 'kartofler'],
+        ['tomat', 'tomater'],
+        ['æble', 'æbler'],
+        ['peberfrugt', 'peberfrugter'],
+        ['hakket kød', 'hakkekød'],
+        ['oksekød', 'hakket oksekød'],
+        ['hakkekød', 'hakket oksekød'],
+        ['svinekød', 'hakket svinekød'],
+        ['kyllingebryst', 'kylling'],
+        ['kyllingelår', 'kylling'],
+        ['rødløg', 'løg']
+      ];
+
+      for (const [a, b] of pairs) {
+        if ((u.includes(a) && r.includes(b)) || (u.includes(b) && r.includes(a))) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function evaluateRecipe(recipe) {
+      const have = [];
+      const missing = [];
+
+      recipe.ingredients.forEach(ing => {
+        const matched = selectedIngredients.some(userIng => isIngredientMatch(userIng, ing));
+        if (matched) {
+          have.push(ing);
+        } else {
+          missing.push(ing);
+        }
+      });
+
+      const total = recipe.ingredients.length;
+      const matchCount = have.length;
+      const ratio = total > 0 ? matchCount / total : 0;
+
+      return {
+        ...recipe,
+        have,
+        missing,
+        matchCount,
+        total,
+        ratio
+      };
+    }
+
+    // =========================================================================
+    // 4. UI RENDERING FUNKTIONER
+    // =========================================================================
+    function showToast(message) {
+      const toast = document.getElementById('toastNotification');
+      toast.textContent = message;
+      toast.classList.remove('hidden');
+      clearTimeout(toast._timeout);
+      toast._timeout = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2600);
+    }
+
+    function renderQuickIngredients() {
+      const container = document.getElementById('quickIngredientsContainer');
+      container.innerHTML = '';
+
+      QUICK_BASICS.forEach(item => {
+        const isSelected = selectedIngredients.some(s => normalizeText(s) === normalizeText(item));
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = isSelected
+          ? 'text-xs font-semibold px-3 py-2 rounded-xl bg-sage-600 text-white border border-sage-600 shadow-2xs transition active:scale-95'
+          : 'text-xs font-semibold px-3 py-2 rounded-xl bg-white hover:bg-cream-200 text-stone-700 border border-cream-200 transition active:scale-95';
+        btn.textContent = isSelected ? `✓ ${item}` : `+ ${item}`;
+        btn.addEventListener('click', () => {
+          if (isSelected) {
+            removeIngredient(item);
+          } else {
+            addIngredient(item);
+          }
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    function renderSelectedIngredients() {
+      const wrapper = document.getElementById('selectedIngredientsWrapper');
+      const list = document.getElementById('selectedIngredientsList');
+      const countEl = document.getElementById('selectedCount');
+      const clearBtn = document.getElementById('clearAllIngredientsBtn');
+
+      countEl.textContent = selectedIngredients.length;
+
+      if (selectedIngredients.length === 0) {
+        wrapper.classList.add('hidden');
+        clearBtn.classList.add('hidden');
+        return;
+      }
+
+      wrapper.classList.remove('hidden');
+      clearBtn.classList.remove('hidden');
+      list.innerHTML = '';
+
+      selectedIngredients.forEach(ing => {
+        const chip = document.createElement('span');
+        chip.className = 'inline-flex items-center gap-1.5 bg-sage-100 text-sage-700 font-semibold text-sm pl-3.5 pr-2 py-1.5 rounded-full border border-sage-600/20';
+        chip.innerHTML = `
+          <span>${escapeHtml(ing)}</span>
+          <button type="button" aria-label="Fjern ${escapeHtml(ing)}" class="w-6 h-6 rounded-full hover:bg-sage-600 hover:text-white flex items-center justify-center transition">
+            ✕
+          </button>
+        `;
+        chip.querySelector('button').addEventListener('click', () => removeIngredient(ing));
+        list.appendChild(chip);
+      });
+    }
+
+    function renderRecipes() {
+      const grid = document.getElementById('recipesGrid');
+      const emptyState = document.getElementById('emptyState');
+      const heading = document.getElementById('resultsHeading');
+      const subheading = document.getElementById('resultsSubheading');
+      const countBadge = document.getElementById('recipeCountBadge');
+
+      const allEvaluated = getAllRecipes().map(evaluateRecipe);
+      let displayedRecipes = [];
+
+      if (selectedIngredients.length === 0) {
+        displayedRecipes = allEvaluated;
+        heading.textContent = 'Alle hverdagsopskrifter';
+        subheading.textContent = 'Tilføj ingredienser ovenfor for at filtrere og rangere opskrifter';
+      } else {
+        // Filtrér så kun opskrifter med mindst 1 match vises, sorteret efter flest matches & højeste andel
+        displayedRecipes = allEvaluated
+          .filter(r => r.matchCount > 0)
+          .sort((a, b) => {
+            if (b.matchCount !== a.matchCount) return b.matchCount - a.matchCount;
+            return b.ratio - a.ratio;
+          });
+
+        heading.textContent = 'Matchende opskrifter';
+        subheading.textContent = 'Sorteret efter flest matchende ingredienser fra dit lager';
+      }
+
+      countBadge.textContent = `${displayedRecipes.length} ${displayedRecipes.length === 1 ? 'opskrift' : 'opskrifter'}`;
+      grid.innerHTML = '';
+
+      if (displayedRecipes.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      displayedRecipes.forEach(recipe => {
+        const card = document.createElement('article');
+        card.className = 'bg-white hover:bg-cream-50/80 rounded-3xl p-4 sm:p-5 border border-cream-200 shadow-xs hover:shadow-md transition-all cursor-pointer active:scale-[0.99]';
+        card.addEventListener('click', () => openRecipeModal(recipe.id));
+
+        // Beregn badge farve og tekst
+        const isFullMatch = selectedIngredients.length > 0 && recipe.missing.length === 0;
+        const matchBadgeClass = selectedIngredients.length === 0
+          ? 'bg-cream-100 text-stone-600'
+          : isFullMatch
+            ? 'bg-sage-600 text-white'
+            : 'bg-sage-100 text-sage-700';
+
+        const matchText = selectedIngredients.length === 0
+          ? `${recipe.total} ingredienser`
+          : isFullMatch
+            ? `🎉 Du har alle ${recipe.total} ingredienser!`
+            : `Du har ${recipe.matchCount} af ${recipe.total} ingredienser`;
+
+        // Progress bar bredde
+        const progressPercent = selectedIngredients.length > 0 ? Math.round(recipe.ratio * 100) : 0;
+
+        // Generer ingrediens-pills (grøn hvis man har den, grå/orange hvis man mangler)
+        const pillsHtml = recipe.ingredients.map(ing => {
+          const userHasIt = recipe.have.includes(ing);
+          if (selectedIngredients.length === 0) {
+            return `<span class="text-xs px-2.5 py-1 rounded-lg bg-cream-100 text-stone-700 font-medium">${escapeHtml(ing)}</span>`;
+          }
+          if (userHasIt) {
+            return `<span class="text-xs px-2.5 py-1 rounded-lg bg-sage-100 text-sage-700 font-semibold border border-sage-600/20">✓ ${escapeHtml(ing)}</span>`;
+          }
+          return `<span class="text-xs px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800/80 border border-amber-200/80">${escapeHtml(ing)}</span>`;
+        }).join('');
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-cream-100 flex items-center justify-center text-2xl shrink-0">
+                ${recipe.emoji || '🍲'}
+              </div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs font-bold px-2.5 py-0.5 rounded-full ${matchBadgeClass}">
+                    ${matchText}
+                  </span>
+                  <span class="text-xs font-medium text-stone-500">⏱ ${escapeHtml(recipe.time)}</span>
+                  ${recipe.isCustom ? '<span class="text-[11px] font-semibold bg-stone-100 text-stone-600 px-2 py-0.5 rounded-full">Egen</span>' : ''}
+                </div>
+                <h3 class="text-base sm:text-lg font-extrabold text-stone-900 mt-1 leading-snug">${escapeHtml(recipe.title)}</h3>
+              </div>
+            </div>
+            <div class="text-stone-400 self-center pl-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>
+          </div>
+
+          ${selectedIngredients.length > 0 ? `
+            <div class="w-full bg-cream-200 h-1.5 rounded-full mt-3 overflow-hidden">
+              <div class="bg-sage-600 h-full rounded-full transition-all duration-300" style="width: ${progressPercent}%"></div>
+            </div>
+          ` : ''}
+
+          <div class="flex flex-wrap gap-1.5 mt-3.5">
+            ${pillsHtml}
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    function updateAllUI() {
+      renderQuickIngredients();
+      renderSelectedIngredients();
+      renderRecipes();
+    }
+
+    // =========================================================================
+    // 5. INGREDIENS-HANDLINGER
+    // =========================================================================
+    function addIngredient(rawText) {
+      const parts = rawText.split(',').map(p => p.trim()).filter(Boolean);
+      let addedAny = false;
+
+      parts.forEach(part => {
+        const formatted = part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+        const exists = selectedIngredients.some(item => normalizeText(item) === normalizeText(formatted));
+        if (!exists) {
+          selectedIngredients.push(formatted);
+          addedAny = true;
+        }
+      });
+
+      if (addedAny) {
+        saveInventoryState();
+        updateAllUI();
+      }
+    }
+
+    function removeIngredient(target) {
+      selectedIngredients = selectedIngredients.filter(item => normalizeText(item) !== normalizeText(target));
+      saveInventoryState();
+      updateAllUI();
+    }
+
+    // =========================================================================
+    // 6. OPSKRIFTSVISNING MODAL
+    // =========================================================================
+    function openRecipeModal(recipeId) {
+      const rawRecipe = getAllRecipes().find(r => r.id === recipeId);
+      if (!rawRecipe) return;
+
+      const recipe = evaluateRecipe(rawRecipe);
+      currentOpenedRecipeId = recipe.id;
+      deleteConfirmPending = false;
+
+      document.getElementById('modalEmoji').textContent = recipe.emoji || '🍲';
+      document.getElementById('modalTitle').textContent = recipe.title;
+      document.getElementById('modalTimeBadge').textContent = `⏱ ${recipe.time}`;
+
+      const matchBadge = document.getElementById('modalMatchBadge');
+      if (selectedIngredients.length > 0) {
+        matchBadge.classList.remove('hidden');
+        matchBadge.textContent = `Du har ${recipe.matchCount} af ${recipe.total}`;
+      } else {
+        matchBadge.classList.add('hidden');
+      }
+
+      const customBadge = document.getElementById('modalCustomBadge');
+      const deleteSection = document.getElementById('deleteRecipeSection');
+      const deleteBtn = document.getElementById('deleteRecipeBtn');
+
+      if (recipe.isCustom) {
+        customBadge.classList.remove('hidden');
+        deleteSection.classList.remove('hidden');
+        deleteBtn.textContent = 'Slet opskrift';
+        deleteBtn.className = 'text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3.5 py-2 rounded-xl transition';
+      } else {
+        customBadge.classList.add('hidden');
+        deleteSection.classList.add('hidden');
+      }
+
+      // Opdel ingredienser i 'Du har' og 'Du mangler'
+      document.getElementById('modalHaveCount').textContent = recipe.have.length;
+      document.getElementById('modalMissingCount').textContent = recipe.missing.length;
+
+      const haveList = document.getElementById('modalHaveList');
+      haveList.innerHTML = recipe.have.length > 0
+        ? recipe.have.map(i => `<li class="flex items-center gap-2 font-medium"><span class="text-sage-600 font-bold">✓</span> ${escapeHtml(i)}</li>`).join('')
+        : `<li class="text-xs text-stone-400 italic">Ingen matchende ingredienser valgt endnu</li>`;
+
+      const missingList = document.getElementById('modalMissingList');
+      missingList.innerHTML = recipe.missing.length > 0
+        ? recipe.missing.map(i => `<li class="flex items-center gap-2"><span class="text-amber-600 font-bold">•</span> ${escapeHtml(i)}</li>`).join('')
+        : `<li class="text-xs text-sage-700 font-semibold">🎉 Du har alt hvad du skal bruge!</li>`;
+
+      // Fremgangsmåde
+      const stepsList = document.getElementById('modalStepsList');
+      stepsList.innerHTML = recipe.steps.map((step, idx) => `
+        <li class="flex gap-3">
+          <span class="w-6 h-6 rounded-full bg-terracotta-500 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+            ${idx + 1}
+          </span>
+          <span class="leading-relaxed">${escapeHtml(step)}</span>
+        </li>
+      `).join('');
+
+      document.getElementById('recipeModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeRecipeModal() {
+      document.getElementById('recipeModal').classList.add('hidden');
+      document.body.style.overflow = '';
+      currentOpenedRecipeId = null;
+      deleteConfirmPending = false;
+    }
+
+    // Kopiér manglende ingredienser til udklipsholder
+    function copyMissingIngredients() {
+      const rawRecipe = getAllRecipes().find(r => r.id === currentOpenedRecipeId);
+      if (!rawRecipe) return;
+      const recipe = evaluateRecipe(rawRecipe);
+
+      if (recipe.missing.length === 0) {
+        showToast('Du mangler ingen ingredienser!');
+        return;
+      }
+
+      const textToCopy = `Indkøbsliste til ${recipe.title}:\n- ${recipe.missing.join('\n- ')}`;
+      const tempInput = document.createElement('textarea');
+      tempInput.value = textToCopy;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand('copy');
+        showToast('Indkøbsliste kopieret!');
+      } catch (err) {
+        showToast('Kunne ikke kopiere listen');
+      }
+      document.body.removeChild(tempInput);
+    }
+
+    // =========================================================================
+    // 7. TILFØJ & SLET EGEN OPSKRIFT (SYNKRONISERET TIL FIRESTORE)
+    // =========================================================================
+    function openAddRecipeModal() {
+      document.getElementById('addRecipeModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      document.getElementById('newTitle').focus();
+    }
+
+    function closeAddRecipeModal() {
+      document.getElementById('addRecipeModal').classList.add('hidden');
+      document.body.style.overflow = '';
+      document.getElementById('addRecipeForm').reset();
+      resetScanUI();
+    }
+
+    // =========================================================================
+    // 7B. SCAN PAPIR-OPSKRIFT MED KAMERA / BILLEDE (GEMINI VISION)
+    // =========================================================================
+    function resetScanUI() {
+      const statusBox = document.getElementById('scanStatusBox');
+      const previewImg = document.getElementById('scanPreviewImg');
+      const triggerBtn = document.getElementById('triggerScanBtn');
+      const fileInput = document.getElementById('scanRecipeInput');
+      if (statusBox) statusBox.classList.add('hidden');
+      if (previewImg) {
+        previewImg.classList.add('hidden');
+        previewImg.src = '';
+      }
+      if (triggerBtn) triggerBtn.disabled = false;
+      if (fileInput) fileInput.value = '';
+    }
+
+    // Komprimer og nedskalér mobilfoto før afsendelse for hurtig og stabil aflæsning
+    function compressImageToBase64(file, maxDimension = 1600) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            let { width, height } = img;
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              } else {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            const base64Data = dataUrl.split(',')[1];
+            resolve({ base64Data, dataUrl, mimeType: 'image/jpeg' });
+          };
+          img.onerror = () => reject(new Error('Kunne ikke indlæse billedet'));
+          img.src = event.target.result;
+        };
+        reader.onerror = () => reject(new Error('Kunne ikke læse filen'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function fetchGeminiWithBackoff(url, payload, maxRetries = 3) {
+      let delay = 1000;
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (response.ok) {
+          return await response.json();
+        }
+        if (attempt === maxRetries) {
+          throw new Error(`API-fejl (${response.status})`);
+        }
+        await new Promise((res) => setTimeout(res, delay));
+        delay *= 2;
+      }
+    }
+
+    async function handleScanRecipeFile(file) {
+      if (!file) return;
+
+      const statusBox = document.getElementById('scanStatusBox');
+      const statusText = document.getElementById('scanStatusText');
+      const spinner = document.getElementById('scanSpinner');
+      const previewImg = document.getElementById('scanPreviewImg');
+      const triggerBtn = document.getElementById('triggerScanBtn');
+
+      triggerBtn.disabled = true;
+      statusBox.classList.remove('hidden');
+      spinner.classList.remove('hidden');
+      statusText.textContent = 'Klargør og aflæser opskriftskortet...';
+
+      try {
+        const { base64Data, dataUrl, mimeType } = await compressImageToBase64(file);
+        previewImg.src = dataUrl;
+        previewImg.classList.remove('hidden');
+
+        const prompt = `Du er en dansk køkkenassistent. Aflæs opskriften på dette billede (f.eks. et opskriftskort fra Skagenfood).
+Udtræk:
+1. "title": Rettens fulde danske titel.
+2. "time": Samlet tilberedningstid (f.eks. "30 min"). Hvis den ikke står tydeligt, giv et realistisk bud.
+3. "emoji": Vælg præcis én af disse emojis der passer bedst til retten: "🍲", "🍝", "🍗", "🥗", "🍜", "🍳", "🥙", "🐟".
+4. "ingredients": En liste over råvarerne på dansk med små bogstaver UDEN mængdeangivelser (f.eks. skriv "torsk", "kartofler", "porrer", "fløde" i stedet for "400 g torskefilet"), så de nemt kan matches mod et køleskab. Udelad helt basale ting som vand, salt og peber.
+5. "steps": En liste med trin-for-trin fremgangsmåde på klart dansk.`;
+
+        const payload = {
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                { text: prompt },
+                {
+                  inlineData: {
+                    mimeType,
+                    data: base64Data
+                  }
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: 'OBJECT',
+              properties: {
+                title: { type: 'STRING' },
+                time: { type: 'STRING' },
+                emoji: { type: 'STRING' },
+                ingredients: {
+                  type: 'ARRAY',
+                  items: { type: 'STRING' }
+                },
+                steps: {
+                  type: 'ARRAY',
+                  items: { type: 'STRING' }
+                }
+              },
+              required: ['title', 'time', 'emoji', 'ingredients', 'steps']
+            }
+          }
+        };
+
+        const apiKey = '';
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+        const result = await fetchGeminiWithBackoff(apiUrl, payload);
+
+        const rawJson = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!rawJson) {
+          throw new Error('Intet svar fra billedgenkendelsen');
+        }
+
+        const parsed = JSON.parse(rawJson);
+
+        // Udfyld formularen med de aflæste data
+        if (parsed.title) document.getElementById('newTitle').value = parsed.title;
+        if (parsed.time) document.getElementById('newTime').value = parsed.time;
+
+        const validEmojis = ['🍲', '🍝', '🍗', '🥗', '🍜', '🍳', '🥙', '🐟'];
+        if (parsed.emoji && validEmojis.includes(parsed.emoji)) {
+          document.getElementById('newEmoji').value = parsed.emoji;
+        }
+
+        if (Array.isArray(parsed.ingredients) && parsed.ingredients.length > 0) {
+          document.getElementById('newIngredients').value = parsed.ingredients.join(', ');
+        }
+
+        if (Array.isArray(parsed.steps) && parsed.steps.length > 0) {
+          document.getElementById('newSteps').value = parsed.steps.join('\n');
+        }
+
+        spinner.classList.add('hidden');
+        statusText.textContent = '✓ Opskrift aflæst! Tjek felterne herunder og tryk "Gem opskrift".';
+        showToast('Opskriften er scannet ind!');
+      } catch (err) {
+        console.error('Fejl ved scanning af opskrift:', err);
+        spinner.classList.add('hidden');
+        statusText.textContent = 'Kunne ikke aflæse billedet tydeligt. Prøv et skarpere foto.';
+        showToast('Kunne ikke scanne billedet – prøv igen');
+      } finally {
+        triggerBtn.disabled = false;
+      }
+    }
+
+    async function handleAddRecipeSubmit(e) {
+      e.preventDefault();
+      const title = document.getElementById('newTitle').value.trim();
+      const time = document.getElementById('newTime').value.trim() || '30 min';
+      const emoji = document.getElementById('newEmoji').value;
+      const rawIngredients = document.getElementById('newIngredients').value;
+      const rawSteps = document.getElementById('newSteps').value;
+
+      const ingredients = rawIngredients
+        .split(/[\n,]+/)
+        .map(s => s.trim().toLowerCase())
+        .filter(Boolean);
+
+      const steps = rawSteps
+        .split('\n')
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      if (!title || ingredients.length === 0 || steps.length === 0) {
+        showToast('Udfyld venligst alle felter');
+        return;
+      }
+
+      const recipePayload = {
+        householdCode,
+        title,
+        time,
+        emoji,
+        ingredients,
+        steps,
+        createdAt: Date.now()
+      };
+
+      closeAddRecipeModal();
+
+      if (db && currentUser) {
+        try {
+          const recipesColRef = collection(db, 'artifacts', appId, 'public', 'data', 'household_recipes');
+          await addDoc(recipesColRef, recipePayload);
+          showToast(`"${title}" er gemt og delt med husstanden!`);
+        } catch (err) {
+          console.error('Kunne ikke gemme opskrift i skyen:', err);
+          showToast('Fejl ved gemning i skyen');
+        }
+      } else {
+        customRecipes.unshift({
+          id: 'local-' + Date.now(),
+          ...recipePayload,
+          isCustom: true
+        });
+        updateAllUI();
+        showToast(`"${title}" er gemt lokalt!`);
+      }
+    }
+
+    async function handleDeleteCustomRecipe() {
+      if (!currentOpenedRecipeId) return;
+
+      const deleteBtn = document.getElementById('deleteRecipeBtn');
+      if (!deleteConfirmPending) {
+        deleteConfirmPending = true;
+        deleteBtn.textContent = 'Tryk igen for at bekræfte sletning';
+        deleteBtn.className = 'text-xs font-bold text-white bg-red-600 hover:bg-red-700 px-3.5 py-2 rounded-xl transition';
+        return;
+      }
+
+      const idToDelete = currentOpenedRecipeId;
+      closeRecipeModal();
+
+      if (db && currentUser && !idToDelete.startsWith('local-')) {
+        try {
+          const recipeDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'household_recipes', idToDelete);
+          await deleteDoc(recipeDocRef);
+          showToast('Opskriften blev slettet for hele husstanden');
+        } catch (err) {
+          console.error('Fejl ved sletning i skyen:', err);
+          showToast('Kunne ikke slette opskriften');
+        }
+      } else {
+        customRecipes = customRecipes.filter(r => r.id !== idToDelete);
+        updateAllUI();
+        showToast('Opskriften blev slettet');
+      }
+    }
+
+    // Sikker HTML-escaping
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // =========================================================================
+    // 8. EVENT LISTENERS & INITIALISERING
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      updateSyncStatusUI(false);
+      updateAllUI();
+      initFirebaseSync();
+
+      // Formular til at tilføje ingrediens
+      document.getElementById('ingredientForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('ingredientInput');
+        if (input.value.trim()) {
+          addIngredient(input.value);
+          input.value = '';
+        }
+      });
+
+      // Skift mellem lokalt køleskab og delt husstandskøleskab
+      document.getElementById('syncInventoryToggle').addEventListener('change', async (e) => {
+        syncInventoryEnabled = e.target.checked;
+        if (syncInventoryEnabled) {
+          // Hvis det delte køleskab allerede har varer, vis dem; ellers del nuværende varer
+          if (sharedIngredients.length > 0) {
+            selectedIngredients = [...sharedIngredients];
+          } else if (selectedIngredients.length > 0) {
+            await saveInventoryState();
+          }
+          showToast('Køleskabet deles nu med din kæreste');
+        } else {
+          selectedIngredients = [...localIngredients];
+          showToast('Køleskabet er nu kun på din telefon');
+        }
+        updateAllUI();
+      });
+
+      // Ryd alle valgte ingredienser
+      document.getElementById('clearAllIngredientsBtn').addEventListener('click', () => {
+        selectedIngredients = [];
+        saveInventoryState();
+        updateAllUI();
+      });
+
+      document.getElementById('resetSearchBtn').addEventListener('click', () => {
+        selectedIngredients = [];
+        saveInventoryState();
+        updateAllUI();
+      });
+
+      // Opskriftsvisning modal knapper
+      document.getElementById('closeRecipeModalBtn').addEventListener('click', closeRecipeModal);
+      document.getElementById('closeRecipeFooterBtn').addEventListener('click', closeRecipeModal);
+      document.getElementById('copyMissingBtn').addEventListener('click', copyMissingIngredients);
+      document.getElementById('deleteRecipeBtn').addEventListener('click', handleDeleteCustomRecipe);
+
+      document.getElementById('recipeModal').addEventListener('click', (e) => {
+        if (e.target.id === 'recipeModal') closeRecipeModal();
+      });
+
+      // Tilføj opskrift modal knapper
+      document.getElementById('openAddModalBtn').addEventListener('click', openAddRecipeModal);
+      document.getElementById('closeAddModalBtn').addEventListener('click', closeAddRecipeModal);
+      document.getElementById('cancelAddBtn').addEventListener('click', closeAddRecipeModal);
+      document.getElementById('addRecipeForm').addEventListener('submit', handleAddRecipeSubmit);
+
+      // Scan opskrift med kamera / billedfil
+      const scanInput = document.getElementById('scanRecipeInput');
+      document.getElementById('triggerScanBtn').addEventListener('click', () => {
+        scanInput.click();
+      });
+      scanInput.addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          handleScanRecipeFile(file);
+        }
+      });
+
+      document.getElementById('addRecipeModal').addEventListener('click', (e) => {
+        if (e.target.id === 'addRecipeModal') closeAddRecipeModal();
+      });
+
+      // Husstandskode modal knapper
+      const syncModal = document.getElementById('syncModal');
+      document.getElementById('openSyncModalBtn').addEventListener('click', () => {
+        document.getElementById('displayHouseholdCode').textContent = householdCode;
+        syncModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      });
+      const closeSyncModal = () => {
+        syncModal.classList.add('hidden');
+        document.body.style.overflow = '';
+      };
+      document.getElementById('closeSyncModalBtn').addEventListener('click', closeSyncModal);
+      document.getElementById('doneSyncModalBtn').addEventListener('click', closeSyncModal);
+      syncModal.addEventListener('click', (e) => {
+        if (e.target.id === 'syncModal') closeSyncModal();
+      });
+
+      document.getElementById('shareHouseholdCodeBtn').addEventListener('click', () => {
+        const shareText = `Brug vores fælles husstandskode i Hvad skal vi spise?: ${householdCode}`;
+        const tempInput = document.createElement('textarea');
+        tempInput.value = shareText;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        try {
+          document.execCommand('copy');
+          showToast('Husstandskode kopieret – send den til din kæreste!');
+        } catch (err) {
+          showToast(`Jeres kode er: ${householdCode}`);
+        }
+        document.body.removeChild(tempInput);
+      });
+
+      document.getElementById('changeHouseholdForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('householdCodeInput');
+        if (input.value.trim()) {
+          setHouseholdCode(input.value);
+          input.value = '';
+          closeSyncModal();
+        }
+      });
+
+      document.getElementById('generateNewCodeBtn').addEventListener('click', () => {
+        const freshCode = generateHouseholdCode();
+        setHouseholdCode(freshCode);
+      });
+    });
+  </script>
+</body>
+</html>
+```
